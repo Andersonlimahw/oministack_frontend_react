@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FiPower, FiTrash2 } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import './style.css';
 import logo from '../../assets/images/logo.svg';
@@ -10,6 +10,8 @@ export default () => {
     const ongName = localStorage.getItem('ongName');
     const ongId = localStorage.getItem('ongId');
     const [incidents, setIncidents] = useState([]);
+    const history = useHistory();
+
     useEffect(() => {
         api.get('profile', {
             headers: {
@@ -23,13 +25,34 @@ export default () => {
         });
     }, [ongId]);
 
+    const handleDeleteIncident = async (id) => {
+         try {
+            await api.delete(`incidents/${id}`,  {
+                headers: {
+                    Authorization: ongId
+                }
+            }).then(() => {
+                setIncidents(incidents.filter(incident => incident.id !== id));
+                alert('Incidente removido com sucesso!');
+            });
+         } catch(ex) {
+            console.error('[Profile] - [handleDeleteIncident] - Erro:', ex);
+            // TODO criar component pra subistuir alerts
+            alert('Erro ao deletar incidente, por favor tente novamente mais tarde.');
+         }
+    }
+    const handleLogout = async () => {
+       await localStorage.clear();
+       history.push('/');
+    }
+
     const renderIncidentes = () => {
         if (incidents && incidents.length !== 0) {
             return (
                 <ul>
                     {incidents.map((incident) => {
                         return (
-                            <li>
+                            <li key={incident.id}>
                                 <strong>Caso:</strong>
                                 <p>{incident.title}</p>
 
@@ -37,9 +60,12 @@ export default () => {
                                 <p>{incident.description}</p>
 
                                 <strong>Value:</strong>
-                                <p>R$ {incident.value}</p>
+                                <p>{Intl.NumberFormat('pt-BR', {
+                                    style: 'currency', 
+                                    currency: 'BRL', 
+                                }).format(incident.value)}</p>
 
-                                <button type="button">
+                                <button type="button" onClick={() => handleDeleteIncident(incident.id)}>
                                     <FiTrash2 size={18} color="#a8a8b3" />
                                 </button>
                             </li>
@@ -63,7 +89,7 @@ export default () => {
                 <Link to="/incidents/new" className="button">
                     cadastrar novo
                 </Link>
-                <button className="button">
+                <button className="button" onClick={()=> handleLogout()}>
                     <FiPower size={18} color="E02041" />
                 </button>
             </header>
