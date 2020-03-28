@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FiArrowLeft } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import api from '../../services/api';
 
@@ -14,6 +14,7 @@ export default () => {
     const [city, setCity] = useState('');
     const [uf, setUf] = useState('');
 
+    const history = useHistory();
     async function handleRegister(e) {
         e.preventDefault();
         const data = {
@@ -27,6 +28,7 @@ export default () => {
         try {
             const response = await api.post('ongs', data);
             alert(`Seu ID de acesso: ${response.data.id}`);
+            history.push('/');
         } catch(ex){
             alert('Erro ao efeturar cadastro');
             console.error('Error: ', ex);
